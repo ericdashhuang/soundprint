@@ -42,11 +42,15 @@ from app.spotify_client import (
 )
 from app.url_parsing import InvalidSpotifyUrlError, parse_spotify_reference
 from app.vibe_service import get_or_compute_vibe
+from app.warmup import warm_up_external_clients
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    settings = get_settings()
+    if settings.warm_up_on_startup:
+        await warm_up_external_clients(settings)
     yield
 
 
