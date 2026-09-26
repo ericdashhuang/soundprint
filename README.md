@@ -68,6 +68,15 @@ cd frontend
 npm test
 ```
 
+Run the end-to-end browser tests (Selenium + pytest, against a fake Spotify server; see `e2e/README.md`):
+
+```bash
+cd e2e
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+pytest
+```
+
 ## Tech stack
 
 - **Backend**: Python, FastAPI, SQLModel, Postgres (SQLite in-memory for tests).
