@@ -23,20 +23,17 @@ class LandingPage(BasePage):
 
     def suggestion_names(self) -> list[str]:
         self.wait().until(EC.presence_of_element_located(self.SUGGESTIONS))
-        return [option.text for option in self.driver.find_elements(*self.SUGGESTIONS)]
+        return self.texts(self.SUGGESTIONS)
 
     def choose_suggestion(self, name: str) -> RoundPage:
         self.suggestion_names()
-        for option in self.driver.find_elements(*self.SUGGESTIONS):
-            if option.text == name:
-                option.click()
-                break
-        else:
-            raise AssertionError(f"No suggestion named {name!r}")
+        self.click_by_text(self.SUGGESTIONS, name, "suggestion")
         return RoundPage(self.driver).wait_until_loaded()
 
     def submit(self) -> None:
         self.driver.find_element(*self.START_BUTTON).click()
 
     def error_text(self) -> str:
-        return self.wait().until(EC.visibility_of_element_located(self.ERROR)).text
+        return self.retry_on_stale(
+            lambda: self.wait().until(EC.visibility_of_element_located(self.ERROR)).text
+        )

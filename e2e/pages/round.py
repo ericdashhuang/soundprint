@@ -21,14 +21,10 @@ class RoundPage(GamePage):
         return self.driver.find_element(*self.HEADING).text
 
     def album_options(self) -> list[str]:
-        return [button.text for button in self.driver.find_elements(*self.ALBUM_BUTTONS)]
+        return self.texts(self.ALBUM_BUTTONS)
 
     def guess(self, album_name: str) -> None:
-        for button in self.driver.find_elements(*self.ALBUM_BUTTONS):
-            if button.text == album_name:
-                button.click()
-                return
-        raise AssertionError(f"No album option named {album_name!r}")
+        self.click_by_text(self.ALBUM_BUTTONS, album_name, "album option")
 
     def guess_wrong(self, album_name: str) -> None:
         """Guess an album expected to be wrong and wait until it is eliminated."""
@@ -43,7 +39,9 @@ class RoundPage(GamePage):
         self.wait().until(lambda _: album_name not in self.album_options())
 
     def wrong_guess_line(self) -> str:
-        return self.wait().until(EC.visibility_of_element_located(self.WRONG_GUESS_LINE)).text
+        return self.retry_on_stale(
+            lambda: self.wait().until(EC.visibility_of_element_located(self.WRONG_GUESS_LINE)).text
+        )
 
     def give_up(self) -> RevealPage:
         self.driver.find_element(*self.GIVE_UP_BUTTON).click()

@@ -17,4 +17,4 @@ class RevealPage(GamePage):
         return self.driver.find_element(*self.ALBUM_NAME).text
 
     def track_names(self) -> list[str]:
-        return [element.text for element in self.driver.find_elements(*self.TRACK_NAMES)]
+        return self.texts(self.TRACK_NAMES)

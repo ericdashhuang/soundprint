@@ -16,7 +16,7 @@ class GamePage(BasePage):
         return self.wait().until(EC.visibility_of_element_located(self.CHART)).is_displayed()
 
     def metric_tabs(self) -> list[str]:
-        return [tab.text for tab in self.driver.find_elements(*self.METRIC_TABS)]
+        return self.texts(self.METRIC_TABS)
 
     def wait_for_metric_tabs(self, expected: list[str]) -> None:
         self.wait().until(lambda _: self.metric_tabs() == expected)
@@ -25,7 +25,6 @@ class GamePage(BasePage):
         """Maps each glossary term to whether it is still locked."""
         locked_badge = "Not yet revealed"
         terms = {}
-        for element in self.driver.find_elements(*self.GLOSSARY_TERMS):
-            text = element.text
+        for text in self.texts(self.GLOSSARY_TERMS):
             terms[text.replace(locked_badge, "").strip()] = locked_badge in text
         return terms
