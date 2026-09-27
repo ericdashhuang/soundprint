@@ -32,10 +32,10 @@ export interface LookupResult {
   tracks: Track[];
 }
 
-// --- Album-guessing game -----------------------------------------------------
+// --- album guessing game -----------------------------------------------------
 
-// Metric keys revealed one at a time as guesses go wrong, in reveal order.
-// "vibeScore" is the always-visible base line and is not part of this list.
+// metric keys revealed one at a time as guesses go wrong, in reveal order
+// "vibeScore" is the always visible base line and is not part of this list
 export type HintMetric =
   | "danceability"
   | "acousticness"
@@ -96,9 +96,9 @@ export interface RevealedMetric {
 export interface GuessResponse {
   correct: boolean;
   wrong_guess_count: number;
-  // Authoritative, cumulative list of every album ID guessed wrong so far
-  // this round - render eliminated options from this, not from locally
-  // accumulated state.
+  // authoritative, cumulative list of every album id guessed wrong so far
+  // this round, render eliminated options from this, not from locally
+  // accumulated state
   eliminated_album_ids: string[];
   newly_revealed_metric: RevealedMetric | null;
 }

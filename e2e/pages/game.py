@@ -5,8 +5,8 @@ from pages.base import BasePage
 
 
 class GamePage(BasePage):
-    """What the round and reveal screens have in common: the metric chart and
-    the metric glossary."""
+    """what the round and reveal screens have in common the metric chart and
+    the metric glossary"""
 
     CHART = (By.CSS_SELECTOR, "[data-testid='game-chart']")
     METRIC_TABS = (By.CSS_SELECTOR, "[role='tablist'][aria-label='Chart metric'] [role='tab']")
@@ -22,7 +22,7 @@ class GamePage(BasePage):
         self.wait().until(lambda _: self.metric_tabs() == expected)
 
     def glossary(self) -> dict[str, bool]:
-        """Maps each glossary term to whether it is still locked."""
+        """maps each glossary term to whether it is still locked"""
         locked_badge = "Not yet revealed"
         terms = {}
         for text in self.texts(self.GLOSSARY_TERMS):

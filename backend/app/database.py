@@ -8,12 +8,12 @@ _engine = None
 
 
 def _normalize_database_url(url: str) -> str:
-    # Managed Postgres providers (e.g. Render) hand out bare "postgres://" or
-    # "postgresql://" connection strings. SQLAlchemy's default driver for
-    # both is psycopg2, which this project doesn't install - only psycopg
-    # (v3), via the "postgresql+psycopg://" dialect. Without this rewrite,
-    # create_engine() raises ModuleNotFoundError: No module named 'psycopg2'
-    # the first time the app touches the database.
+    # managed postgres providers (eg render) hand out bare "postgres://" or
+    # "postgresql://" connection strings, sqlalchemy's default driver for
+    # both is psycopg2, which this project doesn't install, only psycopg
+    # (v3), via the "postgresql+psycopg://" dialect, without this rewrite,
+    # create_engine() raises ModuleNotFoundError no module named 'psycopg2'
+    # the first time the app touches the database
     if url.startswith("postgres://"):
         return "postgresql+psycopg://" + url[len("postgres://") :]
     if url.startswith("postgresql://"):
@@ -26,8 +26,8 @@ def get_engine():
     if _engine is None:
         url = _normalize_database_url(get_settings().database_url)
         connect_args = {}
-        # In-memory SQLite (used by the test suite) needs a shared connection
-        # pool, or each new connection would see an empty, separate database.
+        # in memory sqlite (used by the test suite) needs a shared connection
+        # pool, or each new connection would see an empty, separate database
         if url.startswith("sqlite") and ":memory:" in url:
             from sqlalchemy.pool import StaticPool
 

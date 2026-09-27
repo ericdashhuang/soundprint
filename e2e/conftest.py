@@ -1,8 +1,8 @@
-"""Fixtures: start the fake upstream, the real backend and the real frontend
-once per session, and give every test its own fresh Chrome.
+"""fixtures start the fake upstream, the real backend and the real frontend
+once per session, and give every test its own fresh chrome
 
-Run `pytest --headed` to watch the browser. Set E2E_SKIP_BUILD=1 to reuse an
-existing `frontend/.next` build instead of rebuilding the frontend.
+run `pytest --headed` to watch the browser, set E2E_SKIP_BUILD=1 to reuse an
+existing `frontend/.next` build instead of rebuilding the frontend
 """
 
 import os
@@ -39,8 +39,8 @@ def pytest_addoption(parser):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Remember each phase's result on the test item so fixtures can tell
-    whether the test failed (used to take a screenshot on failure)."""
+    """remember each phase's result on the test item so fixtures can tell
+    whether the test failed (used to take a screenshot on failure)"""
     outcome = yield
     setattr(item, f"rep_{call.when}", outcome.get_result())
 
@@ -115,7 +115,7 @@ def servers():
         _wait_for_http(f"http://127.0.0.1:{BACKEND_PORT}/api/health", "Backend", tmp / "backend.log")
 
         # NEXT_PUBLIC_* values are baked in at build time, so the frontend must
-        # be (re)built to point at the test backend.
+        # be (re)built to point at the test backend
         frontend_env = {**base_env, "NEXT_PUBLIC_API_BASE_URL": f"http://localhost:{BACKEND_PORT}"}
         if not os.environ.get("E2E_SKIP_BUILD"):
             build_log = tmp / "frontend-build.log"
@@ -168,9 +168,9 @@ def landing_page(driver, servers) -> LandingPage:
 
 @pytest.fixture
 def target_album(servers):
-    """Returns a function giving the secret target album name of the newest
-    round, read straight from the backend's database. The game picks its
-    target at random, so tests look it up instead of guessing."""
+    """returns a function giving the secret target album name of the newest
+    round, read straight from the backend's database, the game picks its
+    target at random, so tests look it up instead of guessing"""
 
     def lookup() -> str:
         with sqlite3.connect(servers.db_path) as connection:

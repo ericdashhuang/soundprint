@@ -1,9 +1,9 @@
-"""A tiny fake of the two third-party APIs the backend calls: Spotify and ReccoBeats.
+"""a tiny fake of the two third party apis the backend calls spotify and reccobeats
 
-It serves a fixed catalog so the end-to-end tests are deterministic and need
-no Spotify credentials. Only the routes the backend actually uses exist here.
-Both APIs are served from one host; their route prefixes do not collide
-(Spotify: /api/token and /v1/search|artists|albums, ReccoBeats: /v1/track).
+it serves a fixed catalog so the end to end tests are deterministic and need
+no spotify credentials, only the routes the backend actually uses exist here
+both apis are served from one host; their route prefixes do not collide
+(spotify /api/token and /v1/search|artists|albums, reccobeats /v1/track)
 """
 
 import hashlib
@@ -15,8 +15,8 @@ ARTISTS = {
     "artist-fake-orchestra": "Fake Orchestra",
 }
 
-# Album and track names avoid the substrings the backend's studio-album filter
-# rejects (e.g. "live", "remix", "deluxe"), so every album counts as a real one.
+# album and track names avoid the substrings the backend's studio album filter
+# rejects (eg "live", "remix", "deluxe"), so every album counts as a real one
 ALBUMS = {
     "album-first-light": ("First Light", ["Opening Bars", "Paper Moon", "Neon Harbor", "Glass Garden"]),
     "album-second-skin": ("Second Skin", ["Quiet Engine", "Amber Road", "Salt Flats", "Copper Sky"]),
@@ -32,7 +32,7 @@ def _track_id(album_id: str, number: int) -> str:
 
 
 def _unit(seed: str, salt: str) -> float:
-    """Deterministic pseudo-random number in [0, 1) derived from the inputs."""
+    """deterministic pseudo random number in [0, 1) derived from the inputs"""
     digest = hashlib.md5(f"{seed}:{salt}".encode()).hexdigest()
     return int(digest[:8], 16) / 0x100000000
 

@@ -1,13 +1,13 @@
-"""Test-only launcher for the real SoundPrint backend.
+"""test only launcher for the real soundprint backend
 
-The backend hardcodes the Spotify and ReccoBeats URLs as module constants that
-are read at call time. This launcher repoints them at the fake upstream and
+the backend hardcodes the spotify and reccobeats urls as module constants that
+are read at call time, this launcher repoints them at the fake upstream and
 then starts the unmodified backend app with uvicorn, so no production code
-has to change for the end-to-end tests.
+has to change for the end to end tests
 
-Usage: python run_backend.py <port>
-Environment: FAKE_UPSTREAM_URL (e.g. http://127.0.0.1:9100), plus the usual
-backend settings (DATABASE_URL, SPOTIFY_CLIENT_ID, ...).
+usage python run_backend.py <port>
+environment FAKE_UPSTREAM_URL (eg http://127.0.0.1:9100), plus the usual
+backend settings (DATABASE_URL, SPOTIFY_CLIENT_ID, ...)
 """
 
 import os

@@ -90,8 +90,8 @@ export default function Home() {
             `Couldn't find an artist named "${attemptedName}" on Spotify. Check the spelling and try again.`
           );
         } else {
-          // Backend already phrases 422s ("not enough albums" / "no suitable
-          // album") as friendly, artist-specific sentences - show as-is.
+          // backend already phrases 422s ("not enough albums" / "no suitable
+          // album") as friendly, artist specific sentences, show as is
           setError(err.message);
         }
       } else {
