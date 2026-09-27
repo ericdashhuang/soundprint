@@ -35,8 +35,8 @@ def test_warm_up_never_raises_when_spotify_is_unreachable():
         return_value=Response(200, json={"content": []})
     )
 
-    # Should not raise even though the Spotify leg fails outright - a failed
-    # warm-up must never block server startup.
+    # should not raise even though the spotify leg fails outright, a failed
+    # warm up must never block server startup
     asyncio.run(warm_up_external_clients(get_settings()))
 
     assert reccobeats_route.call_count == 1

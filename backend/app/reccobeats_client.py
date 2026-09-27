@@ -1,60 +1,60 @@
-"""Primary per-track vibe source: ReccoBeats' free audio-features API.
+"""primary per track vibe source reccobeats' free audio features api
 
-ReccoBeats (https://reccobeats.com) republishes Spotify-audio-features-shaped
-values (energy, valence, danceability, tempo, etc.) computed by its own
+reccobeats (https://reccobeats.com) republishes spotify audio features shaped
+values (energy, valence, danceability, tempo, etc) computed by its own
 pipeline, keyed by track identity rather than by needing a 30-second preview
-clip to analyze. This is the primary vibe source; app/vibe_analysis.py's
-preview+librosa path is now the fallback for whenever ReccoBeats has no match
-(see app/vibe_service.py and the project AGENTS.md for why - preview-URL
-availability turned out to be far rarer in practice than originally assumed).
+clip to analyze, this is the primary vibe source; app/vibe_analysis.py's
+preview+librosa path is now the fallback for whenever reccobeats has no match
+(see app/vibe_service.py and the project AGENTS.md for why, preview url
+availability turned out to be far rarer in practice than originally assumed)
 
-The contract below was confirmed against ReccoBeats' own OpenAPI spec (the
-JSON embedded in its docs site's page bundles, not just the rendered HTML,
-which loads request/response details client-side and doesn't expose them to
-a plain fetch):
+the contract below was confirmed against reccobeats' own openapi spec (the
+json embedded in its docs site's page bundles, not just the rendered html,
+which loads request/response details client side and doesn't expose them to
+a plain fetch)
 
-  - Base URL: https://api.reccobeats.com - no API key or Authorization header
-    is required for any endpoint used here (confirmed via ReccoBeats' own
-    "Introduction" doc page: "No API access key or authentication
-    required"). There is therefore no RECCOBEATS_API_KEY setting to add.
-  - `GET /v1/track?ids=<id>` resolves one or more tracks by ReccoBeats ID,
-    Spotify ID, *or* ISRC, returning each match's own ReccoBeats UUID. This
-    module passes the Spotify track ID already in hand (from the Spotify
-    lookup - see app/lookup.py) rather than searching by track name + artist
-    via `GET /v1/track/search`: an ID match is exact, while a name/artist
+  base url https://api.reccobeats.com, no api key or authorization header
+    is required for any endpoint used here (confirmed via reccobeats' own
+    "introduction" doc page "no api access key or authentication
+    required"), there is therefore no RECCOBEATS_API_KEY setting to add
+  `GET /v1/track?ids=<id>` resolves one or more tracks by reccobeats id,
+    spotify id, *or* isrc, returning each match's own reccobeats uuid, this
+    module passes the spotify track id already in hand (from the spotify
+    lookup, see app/lookup.py) rather than searching by track name + artist
+    via `GET /v1/track/search` an id match is exact, while a name/artist
     text search can silently return the wrong track for a title that exists
-    in multiple versions (remaster, live, cover, etc). It also avoids an
-    extra Spotify call to fetch ISRC via `external_ids`, since the Spotify
-    ID is already available and is at least as precise a key.
-  - `GET /v1/track/{reccobeats_id}/audio-features` then returns the actual
-    feature vector for that resolved track.
+    in multiple versions (remaster, live, cover, etc), it also avoids an
+    extra spotify call to fetch isrc via `external_ids`, since the spotify
+    id is already available and is at least as precise a key
+  `GET /v1/track/{reccobeats_id}/audio-features` then returns the actual
+    feature vector for that resolved track
 
-Field mapping onto this project's VibeOut/TrackVibe shape:
-  - `energy` maps directly - the same 0-1 "intensity" concept the librosa
-    fallback also produces.
-  - `brightness` has no literal ReccoBeats analog (the librosa fallback's
-    "brightness" is a spectral-centroid signal ReccoBeats doesn't expose).
-    ReccoBeats' `valence` (0-1, sad/dark -> happy/bright mood) is used
-    instead: for this project's bright/cheerful-vs-dark/moody vibe axis it's
-    the closer semantic fit of what ReccoBeats does expose.
-  - `tempo_bpm` maps directly from ReccoBeats' `tempo`.
-  - `vibe_score` mirrors the librosa fallback's own formula: the mean of
-    `energy` and `brightness` (here, valence).
-  - `danceability`, `acousticness`, `instrumentalness`, `speechiness`,
-    `loudness`, `key`, and `mode` map directly from ReccoBeats' own
-    identically-named fields - confirmed present in the real
-    `/audio-features` response. These have no librosa-fallback equivalent
+field mapping onto this project's VibeOut/TrackVibe shape
+  `energy` maps directly, the same 0 to 1 "intensity" concept the librosa
+    fallback also produces
+  `brightness` has no literal reccobeats analog (the librosa fallback's
+    "brightness" is a spectral centroid signal reccobeats doesn't expose)
+    reccobeats' `valence` (0 to 1, sad/dark -> happy/bright mood) is used
+    instead for this project's bright/cheerful-vs-dark/moody vibe axis it's
+    the closer semantic fit of what reccobeats does expose
+  `tempo_bpm` maps directly from reccobeats' `tempo`
+  `vibe_score` mirrors the librosa fallback's own formula the mean of
+    `energy` and `brightness` (here, valence)
+  `danceability`, `acousticness`, `instrumentalness`, `speechiness`,
+    `loudness`, `key`, and `mode` map directly from reccobeats' own
+    identically named fields, confirmed present in the real
+    `/audio-features` response, these have no librosa fallback equivalent
     (see app/vibe_analysis.py), so they're only ever set on
     `source == "reccobeats"` rows; a track analyzed via librosa instead
-    simply has them as None. They're also read defensively here (missing ->
-    None) rather than with direct key access, in case a given ReccoBeats
-    entry doesn't have full coverage for a track.
+    simply has them as none, they're also read defensively here (missing ->
+    none) rather than with direct key access, in case a given reccobeats
+    entry doesn't have full coverage for a track
 
-A track ReccoBeats has no data for (empty `/v1/track` result, or a 404 from
-`/audio-features`) is not an error - `get_track_vibe` returns None so the
-caller can fall through to the preview+librosa path. Any actual connectivity
+a track reccobeats has no data for (empty `/v1/track` result, or a 404 from
+`/audio-features`) is not an error, `get_track_vibe` returns none so the
+caller can fall through to the preview+librosa path, any actual connectivity
 problem, timeout, rate limit, or malformed response is likewise swallowed and
-logged rather than raised, for the same reason.
+logged rather than raised, for the same reason
 """
 
 import logging
@@ -67,17 +67,17 @@ SOURCE_LABEL = "reccobeats"
 
 BASE_URL = "https://api.reccobeats.com"
 
-# ReccoBeats has no documented SLA on latency, so a request that hangs must
-# not stall the whole lookup - a fast, generous-enough timeout keeps this
-# fallback path from becoming its own outage.
+# reccobeats has no documented sla on latency, so a request that hangs must
+# not stall the whole lookup, a fast, generous enough timeout keeps this
+# fallback path from becoming its own outage
 _REQUEST_TIMEOUT_SECONDS = 5.0
 
 
 class ReccoBeatsError(Exception):
-    """Raised internally for any non-2xx/404 ReccoBeats response.
+    """raised internally for any non-2xx/404 reccobeats response
 
-    Never escapes `get_track_vibe` - it's caught there and turned into a
-    logged warning plus a None return, exactly like a "no match" result.
+    never escapes `get_track_vibe`, it's caught there and turned into a
+    logged warning plus a none return, exactly like a "no match" result
     """
 
 
@@ -135,11 +135,11 @@ async def _fetch_audio_features(client: httpx.AsyncClient, reccobeats_id: str) -
 async def get_track_vibe(
     spotify_track_id: str, http_client: httpx.AsyncClient | None = None
 ) -> dict | None:
-    """Look up a track's vibe via ReccoBeats, keyed by its Spotify track ID.
+    """look up a track's vibe via reccobeats, keyed by its spotify track id
 
-    Returns a dict of vibe_score/energy/brightness/tempo_bpm/source, or None
-    when ReccoBeats has no match or the request fails for any reason - see
-    the module docstring and `ReccoBeatsError` for why this never raises.
+    returns a dict of vibe_score/energy/brightness/tempo_bpm/source, or none
+    when reccobeats has no match or the request fails for any reason, see
+    the module docstring and `ReccoBeatsError` for why this never raises
     """
     client = http_client or httpx.AsyncClient(timeout=_REQUEST_TIMEOUT_SECONDS)
     try:

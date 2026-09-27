@@ -27,7 +27,7 @@ class RoundPage(GamePage):
         self.click_by_text(self.ALBUM_BUTTONS, album_name, "album option")
 
     def guess_wrong(self, album_name: str) -> None:
-        """Guess an album expected to be wrong and wait until it is eliminated."""
+        """guess an album expected to be wrong and wait until it is eliminated"""
         self.guess(album_name)
         self.wait_until_eliminated(album_name)
 

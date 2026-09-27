@@ -1,24 +1,24 @@
-"""Server-side orchestration for the album-guessing game.
+"""server side orchestration for the album guessing game
 
-The whole point of this module is that the target album's identity and its
-track names must never reach the frontend before a round legitimately ends:
+the whole point of this module is that the target album's identity and its
+track names must never reach the frontend before a round legitimately ends
 a browser can trivially inspect network responses, so if the answer were in
-the initial round-creation or guess response, the game would be broken on
-the first round. `GameRound` (app/models.py) is the only place that data
-lives - everything this module hands back for an in-progress round
+the initial round creation or guess response, the game would be broken on
+the first round, `GameRound` (app/models.py) is the only place that data
+lives, everything this module hands back for an in progress round
 (`RoundStart`, `GuessResult`) must be reviewed against that constraint;
 `RevealResult` is the sole exception, and only after `GameRound.solved` (or
-an explicit give-up) is true.
+an explicit give up) is true
 
-Reuses the existing Spotify/vibe pipeline rather than duplicating it -
+reuses the existing Spotify/vibe pipeline rather than duplicating it -
 `SpotifyClient` (app/spotify_client.py) for artist/album/track lookups and
-`get_or_compute_vibes_bulk` (app/vibe_service.py) for the per-track vibe
-metrics, cache included. Track data is fetched via the *bulk* helper (not
-`get_or_compute_vibe` in a per-track loop) specifically because a round can
-need vibe data for a whole album - up to 3 candidate albums, if rerolling -
-and looping the single-track lookup serialized what can be dozens of
-ReccoBeats round trips into a many-seconds-long request that looked hung to
-an end user. See vibe_service.get_or_compute_vibes_bulk's docstring.
+`get_or_compute_vibes_bulk` (app/vibe_service.py) for the per track vibe
+metrics, cache included, track data is fetched via the *bulk* helper (not
+`get_or_compute_vibe` in a per track loop) specifically because a round can
+need vibe data for a whole album, up to 3 candidate albums, if rerolling -
+and looping the single track lookup serialized what can be dozens of
+reccobeats round trips into a many seconds long request that looked hung to
+an end user, see vibe_service.get_or_compute_vibes_bulk's docstring
 """
 
 import asyncio
@@ -34,30 +34,30 @@ from sqlmodel import Session
 from app.models import GameRound
 from app.vibe_service import get_or_compute_vibes_bulk
 
-# How many real albums an artist needs before a round is even worth starting.
+# how many real albums an artist needs before a round is even worth starting
 MIN_ALBUMS_FOR_ROUND = 3
 
-# How many candidate albums to try before giving up on finding one with
-# enough computed vibe data to make a decent puzzle.
+# how many candidate albums to try before giving up on finding one with
+# enough computed vibe data to make a decent puzzle
 MAX_TARGET_ATTEMPTS = 3
 
-# Caps how many Spotify tracklist requests _filter_out_albums_with_non_studio_tracks
-# fires at once. An artist with a normal-sized catalog (Radiohead-scale, ~15-20
+# caps how many spotify tracklist requests _filter_out_albums_with_non_studio_tracks
+# fires at once, an artist with a normal sized catalog (radiohead scale, ~15 to 20
 # studio albums after filtering) firing one request per album with no cap was
-# enough to trip Spotify's real short-window rate limit on every round-start -
-# confirmed live. SpotifyClient retries a single 429'd request on its own
+# enough to trip spotify's real short window rate limit on every round start -
+# confirmed live, SpotifyClient retries a single 429'd request on its own
 # (see spotify_client.py), but that doesn't help if the burst itself is what
 # causes the 429s; keeping the number of simultaneous requests small avoids
-# tripping the limit in the first place.
+# tripping the limit in the first place
 _MAX_CONCURRENT_ALBUM_TRACK_FETCHES = 4
 
-# An album qualifies as a target only if at least this fraction of its
-# tracks have some computed vibe data (from either ReccoBeats or librosa).
+# an album qualifies as a target only if at least this fraction of its
+# tracks have some computed vibe data (from either reccobeats or librosa)
 MIN_VIBE_COVERAGE = 0.5
 
-# Every 2nd wrong guess reveals the next metric in this order. Energy/valence
-# (the base vibe-score line) is visible from the start and is not part of
-# this reveal sequence.
+# every 2nd wrong guess reveals the next metric in this order, Energy/valence
+# (the base vibe score line) is visible from the start and is not part of
+# this reveal sequence
 HINT_METRIC_ORDER = [
     "danceability",
     "acousticness",
@@ -69,28 +69,28 @@ HINT_METRIC_ORDER = [
 
 
 class ArtistNotFoundError(Exception):
-    """No Spotify artist matched the given name."""
+    """no spotify artist matched the given name"""
 
 
 class NotEnoughAlbumsError(Exception):
-    """The artist doesn't have enough real studio albums for a round."""
+    """the artist doesn't have enough real studio albums for a round"""
 
 
 class NoSuitableAlbumError(Exception):
-    """No candidate album had enough computed vibe data for a round."""
+    """no candidate album had enough computed vibe data for a round"""
 
 
 class RoundNotFoundError(Exception):
-    """No GameRound exists with the given id."""
+    """no GameRound exists with the given id"""
 
 
 class RoundNotFinishedError(Exception):
-    """Reveal was requested before the round was solved (and no give-up)."""
+    """reveal was requested before the round was solved (and no give up)"""
 
 
 class SpotifyClientProtocol(Protocol):
-    """The subset of SpotifyClient this module depends on - lets tests pass
-    a lightweight stub instead of a real HTTP-backed client."""
+    """the subset of SpotifyClient this module depends on, lets tests pass
+    a lightweight stub instead of a real http backed client"""
 
     async def get_artist(self, artist_id: str) -> dict: ...
 
@@ -103,24 +103,24 @@ class SpotifyClientProtocol(Protocol):
     async def get_album_tracks(self, album_id: str, limit: int = 50) -> dict: ...
 
 
-# `album_type=album` (via Spotify's `include_groups=album`) still lets through
-# live albums, remix albums, and deluxe/anniversary/reissue editions - all
-# observed live for Daft Punk (e.g. "Alive 2007", "Human After All
-# (Remixes)", "Homework (25th Anniversary Edition)", "TRON: Legacy
-# Reconfigured"). A name-pattern heuristic filters those out; it's not a
-# perfect classifier, but it removes the worst, most obviously-non-studio
-# offenders. `|` is a strong signal of a compilation-style title (observed:
-# "Daft Punk | Random Access Memories | The Collaborators").
+# `album_type=album` (via spotify's `include_groups=album`) still lets through
+# live albums, remix albums, and deluxe/anniversary/reissue editions, all
+# observed live for daft punk (eg "alive 2007", "human after all
+# (remixes)", "homework (25th anniversary edition)", "tron legacy
+# reconfigured"), a name pattern heuristic filters those out; it's not a
+# perfect classifier, but it removes the worst, most obviously nonstudio
+# offenders, `|` is a strong signal of a compilation style title (observed
+# "daft punk | random access memories | the collaborators")
 #
-# This same pattern list is also checked against each candidate album's own
-# TRACK names (see _filter_out_albums_with_non_studio_tracks) - some editions
-# give no hint in the album title itself. Confirmed live for Radiohead:
-# "I Might Be Wrong" is their actual live album, but the title alone has no
-# live-related keyword - every track is titled "<Song> - Live in <City>".
-# "remaster" is here for the same reason: "OK Computer OKNOTOK 1997 2017"'s
-# title doesn't say so, but nearly every track is "<Song> - Remastered".
+# this same pattern list is also checked against each candidate album's own
+# track names (see _filter_out_albums_with_non_studio_tracks), some editions
+# give no hint in the album title itself, confirmed live for radiohead
+# "i might be wrong" is their actual live album, but the title alone has no
+# live related keyword, every track is titled "<song>, live in <city>"
+# "remaster" is here for the same reason "ok computer oknotok 1997 2017"'s
+# title doesn't say so, but nearly every track is "<song>, remastered"
 _NON_STUDIO_NAME_PATTERNS = (
-    "live",  # also matches stylized "Alive 1997/2007", which are live albums
+    "live",  # also matches stylized "alive 1997/2007", which are live albums
     "remix",
     "rmx",
     "rework",
@@ -142,19 +142,19 @@ def _looks_like_non_studio_edition(name: str) -> bool:
 
 
 def _base_album_name(name: str) -> str:
-    """Strip parenthetical and trailing " - <descriptor>" suffixes so
-    reissues of the same core album collapse onto one canonical entry, e.g.
-    "Random Access Memories (10th Anniversary Edition)" and "Random Access
-    Memories (Drumless Edition)" both reduce to "random access memories"."""
+    """strip parenthetical and trailing ", <descriptor>" suffixes so
+    reissues of the same core album collapse onto one canonical entry, eg
+    "random access memories (10th anniversary edition)" and "random access
+    memories (drumless edition)" both reduce to "random access memories" """
     without_parens = re.sub(r"\s*\([^)]*\)\s*", " ", name)
     without_suffix = re.split(r"\s+-\s+", without_parens)[0]
     return without_suffix.strip().lower()
 
 
 def _dedupe_albums_by_base_name(items: list[dict]) -> list[dict]:
-    """Collapse near-duplicate reissues of the same base album into one
-    entry - the shortest name in each group, since edition descriptors only
-    ever add to the plain title, never shorten it."""
+    """collapse near duplicate reissues of the same base album into one
+    entry, the shortest name in each group, since edition descriptors only
+    ever add to the plain title, never shorten it"""
     order: list[str] = []
     best_by_key: dict[str, dict] = {}
     for item in items:
@@ -170,14 +170,14 @@ def _dedupe_albums_by_base_name(items: list[dict]) -> list[dict]:
 async def _filter_out_albums_with_non_studio_tracks(
     client: SpotifyClientProtocol, albums: list[dict]
 ) -> list[dict]:
-    """Album-title filtering alone misses editions whose own name gives no
-    hint (see _NON_STUDIO_NAME_PATTERNS' docstring - "I Might Be Wrong").
-    Fetches each remaining candidate's tracklist concurrently, capped at
+    """album title filtering alone misses editions whose own name gives no
+    hint (see _NON_STUDIO_NAME_PATTERNS' docstring, "i might be wrong")
+    fetches each remaining candidate's tracklist concurrently, capped at
     _MAX_CONCURRENT_ALBUM_TRACK_FETCHES at a time, to avoid both reintroducing
-    the sequential-network-call slowdown fixed in
-    vibe_service.get_or_compute_vibes_bulk and tripping Spotify's rate limit
-    by firing an unbounded burst of simultaneous requests - excludes any
-    album where at least one track name matches the same exclude patterns."""
+    the sequential network call slowdown fixed in
+    vibe_service.get_or_compute_vibes_bulk and tripping spotify's rate limit
+    by firing an unbounded burst of simultaneous requests, excludes any
+    album where at least one track name matches the same exclude patterns"""
     if not albums:
         return albums
 
@@ -250,10 +250,10 @@ class ArtistSuggestion:
 async def search_artists(
     client: SpotifyClientProtocol, query: str, limit: int = 5
 ) -> list[ArtistSuggestion]:
-    """Backs the artist-name autocomplete dropdown - a thin pass-through
-    over Spotify's own artist search, trimmed to the fields the frontend
-    needs (name + image) plus the exact Spotify ID so selecting a suggestion
-    can start a round unambiguously via `start_round(artist_spotify_id=...)`.
+    """backs the artist name autocomplete dropdown, a thin pass through
+    over spotify's own artist search, trimmed to the fields the frontend
+    needs (name + image) plus the exact spotify id so selecting a suggestion
+    can start a round unambiguously via `start_round(artist_spotify_id=...)`
     """
     query = query.strip()
     if not query:
@@ -283,18 +283,18 @@ async def start_round(
     artist_name: str | None = None,
     artist_spotify_id: str | None = None,
 ) -> RoundStart:
-    """Resolve an artist and start a round in one call.
+    """resolve an artist and start a round in one call
 
-    Prefers `artist_spotify_id` when given - the autocomplete dropdown
+    prefers `artist_spotify_id` when given, the autocomplete dropdown
     passes the exact artist the player selected, which avoids the
-    ambiguous-name mismatches a plain name search can hit (two artists can
-    legitimately share a name). Falls back to a name search otherwise.
+    ambiguous name mismatches a plain name search can hit (two artists can
+    legitimately share a name), falls back to a name search otherwise
 
-    Picks a random target album, rerolling (bounded by MAX_TARGET_ATTEMPTS)
+    picks a random target album, rerolling (bounded by MAX_TARGET_ATTEMPTS)
     if the chosen one has too little computed vibe data to make a decent
-    puzzle. Raises ArtistNotFoundError / NotEnoughAlbumsError /
-    NoSuitableAlbumError for the corresponding failure cases - see
-    app/main.py for how those map to HTTP responses.
+    puzzle, raises ArtistNotFoundError / NotEnoughAlbumsError /
+    NoSuitableAlbumError for the corresponding failure cases, see
+    app/main.py for how those map to http responses
     """
     if artist_spotify_id:
         artist = await client.get_artist(artist_spotify_id)
@@ -380,15 +380,15 @@ class GuessResult:
 
 
 def submit_guess(session: Session, round_id: str, guessed_album_id: str) -> GuessResult:
-    """Check a guess server-side and, on a wrong guess, cross any newly
-    unlocked hint threshold. Never returns the target's identity or any
-    track name, even on a correct guess - that's reveal_round's job.
+    """check a guess server side and, on a wrong guess, cross any newly
+    unlocked hint threshold, never returns the target's identity or any
+    track name, even on a correct guess, that's reveal_round's job
 
-    The set of eliminated (wrong-guessed) album IDs is tracked here, in
+    the set of eliminated (wrong guessed) album ids is tracked here, in
     `GameRound.eliminated_album_ids_json`, and returned in full on every
-    call - the frontend should treat this list as authoritative rather than
-    accumulating its own, so a lost or out-of-order response can never leave
-    a previously wrong-guessed album looking guessable again.
+    call, the frontend should treat this list as authoritative rather than
+    accumulating its own, so a lost or out of order response can never leave
+    a previously wrong guessed album looking guessable again
     """
     row = _get_round(session, round_id)
     eliminated: list[str] = json.loads(row.eliminated_album_ids_json)
@@ -449,8 +449,8 @@ class RevealResult:
 
 
 def reveal_round(session: Session, round_id: str, give_up: bool = False) -> RevealResult:
-    """Reveal a round's answer - callable once the round is solved, or with
-    `give_up=True` to end it early without a correct guess."""
+    """reveal a round's answer, callable once the round is solved, or with
+    `give_up=True` to end it early without a correct guess"""
     row = _get_round(session, round_id)
 
     if not row.solved:

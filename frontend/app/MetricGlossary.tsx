@@ -5,10 +5,10 @@ import styles from "./MetricGlossary.module.css";
 const ALL_METRICS: (HintMetric | "vibe_score")[] = ["vibe_score", ...HINT_METRIC_ORDER];
 
 interface MetricGlossaryProps {
-  /** Metrics unlocked so far this round. Omit (or pass all of them) once the
-   * round is over. Every metric's description always renders at full,
-   * normal opacity regardless of reveal state - this only controls whether
-   * the "Not yet revealed" badge shows next to a term. */
+  /** metrics unlocked so far this round, omit (or pass all of them) once the
+   * round is over, every metric's description always renders at full,
+   * normal opacity regardless of reveal state, this only controls whether
+   * the "not yet revealed" badge shows next to a term */
   revealedMetrics: HintMetric[];
 }
 

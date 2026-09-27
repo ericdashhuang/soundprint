@@ -24,10 +24,10 @@ import styles from "./GameChart.module.css";
 
 const PX_PER_TRACK = 76;
 const MIN_CHART_WIDTH = 480;
-// Revealed track-title labels are pinned to this fixed y (within the
+// revealed track title labels are pinned to this fixed y (within the
 // chart's top margin, reserved space the line's plotted values never enter)
-// rather than positioned relative to each point's own y - a label near a
-// high point would otherwise sit right on the line itself.
+// rather than positioned relative to each point's own y, a label near a
+// high point would otherwise sit right on the line itself
 const TRACK_LABEL_Y = 16;
 const CHART_TOP_MARGIN = 32;
 

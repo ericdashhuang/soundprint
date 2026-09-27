@@ -20,14 +20,14 @@ ARTIST = {"id": "artist-1", "name": "Test Artist"}
 @pytest.fixture()
 def session(client):
     # `client` fixture (from conftest) already calls init_db() against the
-    # shared in-memory SQLite engine.
+    # shared in memory sqlite engine
     with Session(get_engine()) as db_session:
         yield db_session
 
 
 class FakeSpotifyClient:
-    """Minimal stand-in for SpotifyClient - game_service only needs these
-    async methods, so tests can skip HTTP mocking entirely."""
+    """minimal stand in for SpotifyClient, game_service only needs these
+    async methods, so tests can skip http mocking entirely"""
 
     def __init__(self, albums: list[dict], tracks_by_album: dict[str, list[dict]]):
         self._albums = albums
@@ -82,9 +82,9 @@ def _good_vibe(**overrides) -> VibeOut:
 
 
 def _bulk_vibe_fake(vibe_by_track: dict[str, VibeOut | None] | None = None, default=None):
-    """Builds a fake for get_or_compute_vibes_bulk. With no args, every
-    track gets `default` (None); pass vibe_by_track to look values up per
-    track id, falling back to `default` for anything not listed."""
+    """builds a fake for get_or_compute_vibes_bulk, with no args, every
+    track gets `default` (none); pass vibe_by_track to look values up per
+    track id, falling back to `default` for anything not listed"""
 
     async def fake(session, tracks):
         lookup = vibe_by_track or {}
@@ -117,8 +117,8 @@ def test_sparse_target_is_rerolled_for_a_better_album(session, monkeypatch):
 
     row = session.get(GameRound, result.round_id)
     assert row.target_album_id == "good-c"
-    # The sparse albums were tried and rejected, not just skipped - confirm
-    # the round still lists all three as guessable options.
+    # the sparse albums were tried and rejected, not just skipped, confirm
+    # the round still lists all three as guessable options
     option_names = {option["name"] for option in result.album_options}
     assert option_names == {"Sparse Album", "Also Sparse", "Good Album"}
 
@@ -142,9 +142,9 @@ def test_no_album_has_enough_data_raises(session, monkeypatch):
 def test_filters_out_live_remix_and_reissue_albums_and_dedupes_reissues(session, monkeypatch):
     monkeypatch.setattr("app.game_service.random.shuffle", lambda seq: None)
 
-    # Mirrors what Spotify's real artist-albums endpoint returns for Daft
-    # Punk: `album_type=album` alone lets live albums, remixes, and reissue/
-    # anniversary editions through alongside the real studio albums.
+    # mirrors what spotify's real artist albums endpoint returns for daft
+    # punk `album_type=album` alone lets live albums, remixes, and reissue/
+    # anniversary editions through alongside the real studio albums
     albums = [
         _album("ram-anniv", "Random Access Memories (10th Anniversary Edition)"),
         _album("homework", "Homework"),
@@ -172,13 +172,13 @@ def test_filters_out_live_remix_and_reissue_albums_and_dedupes_reissues(session,
 
 
 def test_filters_out_albums_whose_only_non_studio_signal_is_in_track_names(session, monkeypatch):
-    """Regression test shaped after real cases caught live for Radiohead:
-    the album's own title gives zero hint it's non-studio, but its track
-    names do. "I Might Be Wrong" is Radiohead's actual live album - its
-    title has no live-related keyword, but every track says "- Live in
-    <city>". "OK Computer OKNOTOK 1997 2017" is an anniversary reissue whose
-    tracks say "- Remastered" rather than "anniversary". "TKOL RMX 1234567"
-    is a remix album whose tracks say "Remix"/"Rmx"."""
+    """regression test shaped after real cases caught live for radiohead
+    the album's own title gives zero hint it's nonstudio, but its track
+    names do, "i might be wrong" is radiohead's actual live album, its
+    title has no live related keyword, but every track says "- live in
+    <city>". "ok computer oknotok 1997 2017" is an anniversary reissue whose
+    tracks say "- remastered" rather than "anniversary". "tkol rmx 1234567"
+    is a remix album whose tracks say "Remix"/"Rmx" """
     monkeypatch.setattr("app.game_service.random.shuffle", lambda seq: None)
 
     albums = [
@@ -243,13 +243,13 @@ def test_hint_metric_revealed_every_second_wrong_guess(session, monkeypatch):
     client_stub = FakeSpotifyClient(albums, tracks_by_album)
     result = asyncio.run(start_round(session, client_stub, "Test Artist"))
 
-    # First wrong guess: no hint yet.
+    # first wrong guess no hint yet
     guess1 = submit_guess(session, result.round_id, "wrong-1")
     assert guess1.correct is False
     assert guess1.wrong_guess_count == 1
     assert guess1.newly_revealed_metric is None
 
-    # Second wrong guess: crosses the first threshold -> danceability.
+    # second wrong guess crosses the first threshold -> danceability
     guess2 = submit_guess(session, result.round_id, "wrong-2")
     assert guess2.correct is False
     assert guess2.wrong_guess_count == 2
@@ -260,26 +260,26 @@ def test_hint_metric_revealed_every_second_wrong_guess(session, monkeypatch):
         {"track_number": 2, "value": 0.6, "mode": None},
     ]
 
-    # Third wrong guess: no new threshold crossed.
+    # third wrong guess no new threshold crossed
     guess3 = submit_guess(session, result.round_id, "wrong-1")
     assert guess3.wrong_guess_count == 3
     assert guess3.newly_revealed_metric is None
 
-    # Fourth wrong guess: crosses the second threshold -> acousticness.
+    # fourth wrong guess crosses the second threshold -> acousticness
     guess4 = submit_guess(session, result.round_id, "wrong-2")
     assert guess4.wrong_guess_count == 4
     assert guess4.newly_revealed_metric["metric"] == "acousticness"
 
-    # A correct guess ends the round without leaking a hint payload.
+    # a correct guess ends the round without leaking a hint payload
     correct = submit_guess(session, result.round_id, "target")
     assert correct.correct is True
     assert correct.newly_revealed_metric is None
 
 
 def test_wrong_guesses_stay_eliminated_cumulatively(session, monkeypatch):
-    """Regression test: a prior bug only reported the most-recently-guessed
+    """regression test a prior bug only reported the most recently guessed
     album as eliminated, so an earlier wrong guess would look guessable
-    again. eliminated_album_ids must accumulate for the whole round."""
+    again. eliminated_album_ids must accumulate for the whole round"""
     monkeypatch.setattr("app.game_service.random.shuffle", lambda seq: None)
     albums = [
         _album("target", "Target Album"),
@@ -304,7 +304,7 @@ def test_wrong_guesses_stay_eliminated_cumulatively(session, monkeypatch):
     guess2 = submit_guess(session, result.round_id, "wrong-2")
     assert set(guess2.eliminated_album_ids) == {"wrong-1", "wrong-2"}
 
-    # Guessing the same wrong album again must not duplicate it in the list.
+    # guessing the same wrong album again must not duplicate it in the list
     guess3 = submit_guess(session, result.round_id, "wrong-1")
     assert sorted(guess3.eliminated_album_ids) == ["wrong-1", "wrong-2"]
 
@@ -355,11 +355,11 @@ def test_round_creation_never_leaks_target_or_track_names(session, monkeypatch):
     client_stub = FakeSpotifyClient(albums, tracks_by_album)
     result = asyncio.run(start_round(session, client_stub, "Test Artist"))
 
-    # hints must only ever carry track_number + vibe_score - never a name.
+    # hints must only ever carry track_number + vibe_score, never a name
     for hint in result.hints:
         assert set(hint.keys()) == {"track_number", "vibe_score"}
 
-    # A wrong guess's hint payload must only ever carry track_number/value/mode.
+    # a wrong guess's hint payload must only ever carry track_number/value/mode
     guess = submit_guess(session, result.round_id, "wrong-1")
     guess2 = submit_guess(session, result.round_id, "wrong-2")
     assert guess2.newly_revealed_metric is not None

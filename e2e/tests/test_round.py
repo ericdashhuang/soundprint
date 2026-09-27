@@ -13,7 +13,7 @@ def round_page(landing_page):
 
 
 def wrong_albums(round_page, target_album, count):
-    """Pick `count` album options that are not the secret target."""
+    """pick `count` album options that are not the secret target"""
     target = target_album()
     return [name for name in round_page.album_options() if name != target][:count]
 

@@ -115,18 +115,18 @@ def test_round_lifecycle_never_leaks_target_before_reveal(client):
     start_body = start_response.json()
     raw_start = json.dumps(start_body)
 
-    # Track names must never appear before reveal.
+    # track names must never appear before reveal
     for name in SECRET_TRACK_NAMES:
         assert name not in raw_start
-    # The album list legitimately shows all names (that's the whole guessing
-    # mechanic) but nothing in the payload may mark which one is correct.
+    # the album list legitimately shows all names (that's the whole guessing
+    # mechanic) but nothing in the payload may mark which one is correct
     option_names = {option["name"] for option in start_body["album_options"]}
     assert option_names == {TARGET_ALBUM_NAME, "Other Album", "Third Album"}
     assert all(set(hint.keys()) == {"track_number", "vibe_score"} for hint in start_body["hints"])
 
     round_id = start_body["round_id"]
 
-    # Wrong guess #1: no hint yet, still no leakage.
+    # wrong guess #1 no hint yet, still no leakage
     wrong_1 = client.post(f"/api/game/rounds/{round_id}/guess", json={"album_spotify_id": ALBUM_B})
     assert wrong_1.status_code == 200
     wrong_1_body = wrong_1.json()
@@ -136,9 +136,9 @@ def test_round_lifecycle_never_leaks_target_before_reveal(client):
     for name in SECRET_TRACK_NAMES:
         assert name not in json.dumps(wrong_1_body)
 
-    # Wrong guess #2: crosses the first hint threshold (danceability), still no leakage,
-    # and both wrong guesses so far remain eliminated (regression: a prior bug only
-    # reported the most recently guessed album).
+    # wrong guess #2 crosses the first hint threshold (danceability), still no leakage,
+    # and both wrong guesses so far remain eliminated (regression a prior bug only
+    # reported the most recently guessed album)
     wrong_2 = client.post(f"/api/game/rounds/{round_id}/guess", json={"album_spotify_id": ALBUM_C})
     assert wrong_2.status_code == 200
     wrong_2_body = wrong_2.json()
@@ -150,11 +150,11 @@ def test_round_lifecycle_never_leaks_target_before_reveal(client):
         assert name not in raw_wrong_2
     assert TARGET_ALBUM_NAME not in raw_wrong_2
 
-    # Reveal is refused before the round is solved.
+    # reveal is refused before the round is solved
     early_reveal = client.post(f"/api/game/rounds/{round_id}/reveal")
     assert early_reveal.status_code == 409
 
-    # Correct guess ends the round without leaking track names itself.
+    # correct guess ends the round without leaking track names itself
     correct = client.post(
         f"/api/game/rounds/{round_id}/guess", json={"album_spotify_id": ALBUM_TARGET}
     )
@@ -164,13 +164,13 @@ def test_round_lifecycle_never_leaks_target_before_reveal(client):
     for name in SECRET_TRACK_NAMES:
         assert name not in json.dumps(correct_body)
 
-    # Only now may the reveal step return the target's identity and track names.
+    # only now may the reveal step return the target's identity and track names
     reveal = client.post(f"/api/game/rounds/{round_id}/reveal")
     assert reveal.status_code == 200
     reveal_body = reveal.json()
     assert reveal_body["album_name"] == TARGET_ALBUM_NAME
-    # Only "danceability" was unlocked during play (wrong guess #2), but the
-    # reveal screen must show every metric regardless of what was unlocked.
+    # only "danceability" was unlocked during play (wrong guess #2), but the
+    # reveal screen must show every metric regardless of what was unlocked
     assert reveal_body["revealed_metrics"] == [
         "danceability",
         "acousticness",

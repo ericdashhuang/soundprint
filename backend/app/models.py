@@ -4,7 +4,7 @@ from sqlmodel import Field, SQLModel
 
 
 class LookupLog(SQLModel, table=True):
-    """A record of each successful album/playlist lookup, for basic usage visibility."""
+    """a record of each successful album/playlist lookup, for basic usage visibility"""
 
     id: int | None = Field(default=None, primary_key=True)
     item_type: str
@@ -14,13 +14,13 @@ class LookupLog(SQLModel, table=True):
 
 
 class TrackVibe(SQLModel, table=True):
-    """Cached vibe/energy analysis for one Spotify track, keyed by track ID so the
-    same track is never re-analyzed just because it shows up in a different
-    album or playlist lookup.
+    """cached vibe/energy analysis for one spotify track, keyed by track id so the
+    same track is never reanalyzed just because it shows up in a different
+    album or playlist lookup
 
-    The columns from `danceability` onward are only ever populated when
-    `source == "reccobeats"` - the librosa fallback has no equivalent signal
-    for them, so they stay None for librosa-sourced rows.
+    the columns from `danceability` onward are only ever populated when
+    `source == "reccobeats"`, the librosa fallback has no equivalent signal
+    for them, so they stay none for librosa sourced rows
     """
 
     spotify_track_id: str = Field(primary_key=True)
@@ -40,14 +40,14 @@ class TrackVibe(SQLModel, table=True):
 
 
 class GameRound(SQLModel, table=True):
-    """Server-side state for one album-guessing round.
+    """server side state for one album guessing round
 
-    This row is the ONLY place the target album's identity and its track
-    names live until the round is solved (or given up) - see
-    app/game_service.py's module docstring. `tracks_json` and
-    `album_options_json` are stored as plain JSON text (rather than a related
-    table) since they're captured once at round-start and never queried by
-    field, only read back whole by the round they belong to.
+    this row is the only place the target album's identity and its track
+    names live until the round is solved (or given up), see
+    app/game_service.py's module docstring, `tracks_json` and
+    `album_options_json` are stored as plain json text (rather than a related
+    table) since they're captured once at round start and never queried by
+    field, only read back whole by the round they belong to
     """
 
     id: str = Field(primary_key=True)

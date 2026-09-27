@@ -109,15 +109,15 @@ describe("GameChart", () => {
   test("does not auto-switch away from a manually selected tab until a new metric arrives", async () => {
     const { rerender } = render(<GameChart hints={hints} revealedMetrics={revealedMetrics} />);
 
-    // Player manually switches back to vibe score after danceability unlocked.
+    // player manually switches back to vibe score after danceability unlocked
     fireEvent.click(screen.getByRole("tab", { name: /energy level/i }));
     expect(screen.getByRole("tab", { name: /energy level/i })).toHaveAttribute(
       "aria-selected",
       "true"
     );
 
-    // Re-rendering with an equal-length revealedMetrics array (a new
-    // reference, but no *new* metric) must not snap the tab back.
+    // rerendering with an equal length revealedMetrics array (a new
+    // reference, but no *new* metric) must not snap the tab back
     rerender(<GameChart hints={hints} revealedMetrics={[...revealedMetrics]} />);
     expect(screen.getByRole("tab", { name: /energy level/i })).toHaveAttribute(
       "aria-selected",

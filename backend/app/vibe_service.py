@@ -1,15 +1,15 @@
-"""Orchestrates per-track vibe analysis with a Postgres-backed cache.
+"""orchestrates per track vibe analysis with a postgres backed cache
 
-Keeps `app/vibe_analysis.py` and `app/reccobeats_client.py` (pure lookup/
+keeps `app/vibe_analysis.py` and `app/reccobeats_client.py` (pure lookup/
 analysis, no database) free of database concerns, and keeps this layer free
-of Spotify concerns - it only needs a track ID and an optional preview URL.
+of spotify concerns, it only needs a track id and an optional preview url
 
-Vibe source order: cache -> ReccoBeats (see app/reccobeats_client.py) ->
-preview+librosa (see app/vibe_analysis.py) -> None. ReccoBeats is primary
-because it needs no audio at all, and real-world Spotify preview-URL
+vibe source order cache -> reccobeats (see app/reccobeats_client.py) ->
+preview+librosa (see app/vibe_analysis.py) -> none, reccobeats is primary
+because it needs no audio at all, and real world spotify preview url
 availability has turned out to be far rarer than originally assumed (see the
 project AGENTS.md); the preview+librosa path remains as a fallback for
-whenever ReccoBeats has no data for a track.
+whenever reccobeats has no data for a track
 """
 
 import asyncio
@@ -48,8 +48,8 @@ def _to_vibe_out(row: TrackVibe) -> VibeOut:
 
 
 async def _compute_vibe_features(spotify_track_id: str, preview_url: str | None) -> dict | None:
-    """Pure computation - no DB access, so this is safe to run concurrently
-    for many tracks at once (see get_or_compute_vibes_bulk)."""
+    """pure computation, no db access, so this is safe to run concurrently
+    for many tracks at once (see get_or_compute_vibes_bulk)"""
     features = await get_track_vibe(spotify_track_id)
 
     if features is None and preview_url:
@@ -73,12 +73,12 @@ async def _compute_vibe_features(spotify_track_id: str, preview_url: str | None)
 async def get_or_compute_vibe(
     session: Session, spotify_track_id: str, preview_url: str | None
 ) -> VibeOut | None:
-    """Return the cached vibe for a track, computing and caching it if needed.
+    """return the cached vibe for a track, computing and caching it if needed
 
-    Tries ReccoBeats first (no preview clip needed), then falls back to the
-    preview+librosa path if ReccoBeats has no match and a preview URL exists.
-    Returns None (never raises) when none of that is available - a missing
-    vibe should never fail the whole lookup request.
+    tries reccobeats first (no preview clip needed), then falls back to the
+    preview+librosa path if reccobeats has no match and a preview url exists
+    returns none (never raises) when none of that is available, a missing
+    vibe should never fail the whole lookup request
     """
     cached = session.get(TrackVibe, spotify_track_id)
     if cached is not None:
@@ -97,20 +97,20 @@ async def get_or_compute_vibe(
 async def get_or_compute_vibes_bulk(
     session: Session, tracks: list[tuple[str, str | None]]
 ) -> dict[str, VibeOut | None]:
-    """Same as get_or_compute_vibe, but for a whole album's worth of tracks
-    at once.
+    """same as get_or_compute_vibe, but for a whole album's worth of tracks
+    at once
 
-    The cache check and DB writes stay sequential (SQLAlchemy's synchronous
-    `Session` isn't safe for concurrent use), but the slow part - the
+    the cache check and db writes stay sequential (sqlalchemy's synchronous
+    `Session` isn't safe for concurrent use), but the slow part, the
     ReccoBeats/librosa network calls for whichever tracks miss the cache -
-    runs concurrently via asyncio.gather. This exists specifically because
-    the album-guessing game's round-start was looping get_or_compute_vibe
+    runs concurrently via asyncio.gather, this exists specifically because
+    the album guessing game's round start was looping get_or_compute_vibe
     one track at a time, which serialized what can be dozens of network
-    round trips: confirmed live at ~16s for a single 14-track album on a
+    round trips confirmed live at ~16s for a single 14-track album on a
     cold cache (and the game may try up to 3 candidate albums before
     settling on one with enough vibe data), which is indistinguishable from
-    "hung" to an end user. Concurrent lookups cut this to roughly the
-    slowest single track's round trip.
+    "hung" to an end user, concurrent lookups cut this to roughly the
+    slowest single track's round trip
     """
     results: dict[str, VibeOut | None] = {}
     misses: list[tuple[str, str | None]] = []

@@ -23,7 +23,7 @@ FAKE_RECCOBEATS_FEATURES = {
 @pytest.fixture()
 def session(client):
     # `client` fixture (from conftest) already calls init_db() against the
-    # shared in-memory SQLite engine.
+    # shared in memory sqlite engine
     with Session(get_engine()) as db_session:
         yield db_session
 
@@ -135,17 +135,17 @@ def test_bulk_lookup_skips_cached_tracks_and_only_fetches_misses(session):
     assert result["track-new"].vibe_score == FAKE_RECCOBEATS_FEATURES["vibe_score"]
     mock_get_track_vibe.assert_awaited_once_with("track-new")
 
-    # The newly computed track is now cached too.
+    # the newly computed track is now cached too
     assert session.get(TrackVibe, "track-new") is not None
 
 
 def test_bulk_lookup_runs_cache_misses_concurrently(session):
-    """Regression test: the album-guessing game's round-start was looping
+    """regression test the album guessing game's round start was looping
     get_or_compute_vibe one track at a time, serializing what can be dozens
-    of ReccoBeats round trips into a many-seconds-long request that looked
-    hung to an end user (confirmed live: ~16s for one 14-track album on a
-    cold cache). Concurrent lookups should take roughly one round trip's
-    worth of time, not N round trips'."""
+    of reccobeats round trips into a many seconds long request that looked
+    hung to an end user (confirmed live ~16s for one 14-track album on a
+    cold cache), concurrent lookups should take roughly one round trip's
+    worth of time, not n round trips'"""
 
     async def slow_vibe(spotify_track_id: str):
         await asyncio.sleep(0.1)
@@ -159,7 +159,7 @@ def test_bulk_lookup_runs_cache_misses_concurrently(session):
 
     assert len(result) == 6
     assert all(vibe is not None for vibe in result.values())
-    # Sequential would take ~0.6s (6 * 0.1s); concurrent stays close to 0.1s.
+    # sequential would take ~0.6s (6 * 0.1s); concurrent stays close to 0.1s
     assert elapsed < 0.3
 
 

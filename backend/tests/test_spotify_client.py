@@ -17,8 +17,8 @@ def _mock_token():
 
 @respx.mock
 def test_retries_after_429_and_respects_retry_after_delay(monkeypatch):
-    """A 429 followed by a 200 on retry should succeed rather than raising,
-    and should sleep for the delay Retry-After actually specifies."""
+    """a 429 followed by a 200 on retry should succeed rather than raising,
+    and should sleep for the delay retry after actually specifies"""
     _mock_token()
     route = respx.get(f"https://api.spotify.com/v1/artists/{ARTIST_ID}")
     route.side_effect = [
@@ -49,7 +49,7 @@ def test_retries_after_429_and_respects_retry_after_delay(monkeypatch):
 
 @respx.mock
 def test_gives_up_after_max_retries(monkeypatch):
-    """A request that keeps returning 429 should eventually raise, not retry forever."""
+    """a request that keeps returning 429 should eventually raise, not retry forever"""
     _mock_token()
     route = respx.get(f"https://api.spotify.com/v1/artists/{ARTIST_ID}")
     route.mock(return_value=Response(429, headers={"Retry-After": "1"}))
@@ -75,9 +75,9 @@ def test_gives_up_after_max_retries(monkeypatch):
 
 @respx.mock
 def test_caps_backoff_for_an_extreme_retry_after_value(monkeypatch):
-    """A pathologically large Retry-After (seen live against a request pattern
-    Spotify treats as abusive) must not sleep for the literal duration - it
-    should be capped rather than hanging the request for hours."""
+    """a pathologically large retry after (seen live against a request pattern
+    spotify treats as abusive) must not sleep for the literal duration, it
+    should be capped rather than hanging the request for hours"""
     _mock_token()
     route = respx.get(f"https://api.spotify.com/v1/artists/{ARTIST_ID}")
     route.side_effect = [
@@ -107,11 +107,11 @@ def test_caps_backoff_for_an_extreme_retry_after_value(monkeypatch):
 
 @respx.mock
 def test_concurrent_burst_caps_simultaneous_requests():
-    """game_service's tracklist-fetch burst must not fire more than
-    _MAX_CONCURRENT_ALBUM_TRACK_FETCHES Spotify requests at once - this is
-    the behavior that trips Spotify's real rate limit if left unbounded, so a
-    regression here (e.g. reverting to a plain asyncio.gather with no
-    semaphore) must fail this test rather than passing quietly."""
+    """game_service's tracklist fetch burst must not fire more than
+    _MAX_CONCURRENT_ALBUM_TRACK_FETCHES spotify requests at once, this is
+    the behavior that trips spotify's real rate limit if left unbounded, so a
+    regression here (eg reverting to a plain asyncio.gather with no
+    semaphore) must fail this test rather than passing quietly"""
     from app.game_service import (
         _MAX_CONCURRENT_ALBUM_TRACK_FETCHES,
         _filter_out_albums_with_non_studio_tracks,

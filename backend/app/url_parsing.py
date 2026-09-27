@@ -10,7 +10,7 @@ _URI_RE = re.compile(r"^spotify:(?P<type>[a-z]+):(?P<id>[A-Za-z0-9]+)$")
 
 
 class InvalidSpotifyUrlError(ValueError):
-    """Raised when a pasted string can't be parsed into a Spotify album/playlist reference."""
+    """raised when a pasted string can't be parsed into a spotify album/playlist reference"""
 
 
 @dataclass(frozen=True)
@@ -20,14 +20,14 @@ class SpotifyRef:
 
 
 def parse_spotify_reference(raw: str) -> SpotifyRef:
-    """Parse a pasted Spotify album/playlist URL or URI into its type and ID.
+    """parse a pasted spotify album/playlist url or uri into its type and id
 
-    Accepts:
-      - https://open.spotify.com/album/{id}
-      - https://open.spotify.com/playlist/{id}?si=...
-      - open.spotify.com/intl-xx/album/{id}  (locale-prefixed links)
-      - spotify:album:{id}
-      - spotify:playlist:{id}
+    accepts
+      https://open.spotify.com/album/{id}
+      https://open.spotify.com/playlist/{id}?si=...
+      open.spotify.com/intl-xx/album/{id}  (locale prefixed links)
+      spotify:album:{id}
+      spotify:playlist:{id}
     """
     if not raw or not raw.strip():
         raise InvalidSpotifyUrlError("URL is empty.")
@@ -43,7 +43,7 @@ def parse_spotify_reference(raw: str) -> SpotifyRef:
         raise InvalidSpotifyUrlError(f"'{raw}' is not a recognized Spotify URL or URI.")
 
     segments = [segment for segment in parsed.path.split("/") if segment]
-    # Locale-prefixed links look like /intl-de/album/{id}; drop a leading "intl-*" segment.
+    # locale prefixed links look like /intl-de/album/{id}; drop a leading "intl-*" segment
     if segments and segments[0].startswith("intl-"):
         segments = segments[1:]
 

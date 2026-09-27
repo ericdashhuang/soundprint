@@ -1,20 +1,20 @@
-# Render Blueprint for Album Flow.
+# render blueprint for album flow
 #
-# Deploy by connecting this repo in the Render dashboard and applying this
-# blueprint. See DEPLOYMENT.md for the remaining manual steps (Render
-# account/billing setup and the two Spotify secrets, which cannot live in
-# this file).
+# deploy by connecting this repo in the render dashboard and applying this
+# blueprint, see DEPLOYMENT.md for the remaining manual steps (render
+# account/billing setup and the two spotify secrets, which cannot live in
+# this file)
 #
-# NOTE on cross-service URLs: Render's `fromService` env var reference only
-# exposes a service's *private-network* host/port (confirmed against
-# https://render.com/docs/blueprint-spec as of 2026-09) - it has no
-# property that returns a service's public https:// URL, which is what a
-# browser needs for NEXT_PUBLIC_API_BASE_URL and what CORS must match
-# against the browser's Origin header. Render assigns each web service a
-# public URL of `https://<name>.onrender.com` deterministically from the
+# note on cross service urls render's `fromService` env var reference only
+# exposes a service's *private network* host/port (confirmed against
+# https://render.com/docs/blueprint-spec as of 2026 to 09), it has no
+# property that returns a service's public https:// url, which is what a
+# browser needs for NEXT_PUBLIC_API_BASE_URL and what cors must match
+# against the browser's origin header, render assigns each web service a
+# public url of `https://<name>.onrender.com` deterministically from the
 # `name` field below, so the two envVars near the bottom of this file
-# hardcode that derived URL rather than guessing one. If you rename either
-# service or attach a custom domain, update both values to match.
+# hardcode that derived url rather than guessing one, if you rename either
+# service or attach a custom domain, update both values to match
 
 databases:
   - name: album-flow-db

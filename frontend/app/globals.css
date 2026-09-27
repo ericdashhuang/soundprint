@@ -8,10 +8,10 @@
   --accent-contrast: #ffffff;
   --error: #c4372b;
 
-  /* Chart series colors for the game's revealed metrics, in fixed reveal
-     order (danceability -> key). --accent (Spotify green) is reserved for
-     the always-visible base vibe-score line, so these skip the palette's
-     green/red slots to avoid colliding with --accent/--error. */
+  /* chart series colors for the game's revealed metrics, in fixed reveal
+     order (danceability -> key), --accent (spotify green) is reserved for
+     the always visible base vibe score line, so these skip the palette's
+     green/red slots to avoid colliding with --accent/--error */
   --chart-danceability: #2a78d6;
   --chart-acousticness: #eb6834;
   --chart-instrumentalness: #1baf7a;

@@ -12,7 +12,7 @@ T = TypeVar("T")
 
 
 class BasePage:
-    """Shared plumbing for page objects: a driver and an explicit-wait helper."""
+    """shared plumbing for page objects a driver and an explicit wait helper"""
 
     def __init__(self, driver: WebDriver):
         self.driver = driver
