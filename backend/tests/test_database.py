@@ -1,4 +1,4 @@
-from app.database import _normalize_database_url
+from app.database import _create_server_engine, _normalize_database_url
 
 
 def test_normalizes_bare_postgresql_scheme_to_psycopg_dialect():
@@ -19,3 +19,9 @@ def test_leaves_explicit_psycopg_dialect_unchanged():
 def test_leaves_sqlite_url_unchanged():
     url = "sqlite:///:memory:"
     assert _normalize_database_url(url) == url
+
+
+def test_server_engine_pre_pings_pooled_connections():
+    # create_engine never connects, so this needs no running postgres
+    engine = _create_server_engine("postgresql+psycopg://user:pass@host:5432/dbname")
+    assert engine.pool._pre_ping is True

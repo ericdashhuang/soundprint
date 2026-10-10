@@ -34,8 +34,16 @@ def get_engine():
             connect_args = {"check_same_thread": False}
             _engine = create_engine(url, connect_args=connect_args, poolclass=StaticPool)
         else:
-            _engine = create_engine(url, echo=False)
+            _engine = _create_server_engine(url)
     return _engine
+
+
+def _create_server_engine(url: str):
+    # neon suspends the database after a few idle minutes and drops every
+    # open connection, so a pooled connection from before the suspend fails
+    # with "SSL connection has been closed unexpectedly" on its next use,
+    # pre ping swaps a dead connection for a fresh one before handing it out
+    return create_engine(url, echo=False, pool_pre_ping=True)
 
 
 def init_db() -> None:
