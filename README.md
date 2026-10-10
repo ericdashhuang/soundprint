@@ -11,7 +11,7 @@ Each wrong guess eliminates an album and reveals one more per-track audio metric
 - `backend/` - FastAPI service that talks to the Spotify Web API (Client Credentials flow, app-level auth only, no user login), orchestrates each round server-side (`app/game_service.py`), computes a per-track vibe score for each metric (primarily via ReccoBeats, falling back to 30-second preview clips plus librosa when ReccoBeats has no match), and exposes the `/api/game/*` endpoints.
 - `frontend/` - Next.js (App Router) app: an artist search box, a chart (`GameChart.tsx`) that reveals one metric line at a time as guesses go wrong, and a metric glossary (`MetricGlossary.tsx`) shown from round start.
 - `docker-compose.yml` - local Postgres for backend development.
-- `render.yaml` - Render Blueprint for deploying both services plus a managed Postgres database. See `DEPLOYMENT.md` for the remaining manual steps.
+- `render.yaml` - Render Blueprint for deploying both services (Postgres is hosted on Neon). See `DEPLOYMENT.md` for the remaining manual steps.
 
 ## Prerequisites
 

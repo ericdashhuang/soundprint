@@ -2,7 +2,7 @@
 #
 # deploy by connecting this repo in the render dashboard and applying this
 # blueprint, see DEPLOYMENT.md for the remaining manual steps (render
-# account/billing setup and the two spotify secrets, which cannot live in
+# account/billing setup and the database url plus two spotify secrets, which cannot live in
 # this file)
 #
 # note on cross service urls render's `fromService` env var reference only
@@ -16,11 +16,9 @@
 # hardcode that derived url rather than guessing one, if you rename either
 # service or attach a custom domain, update both values to match
 
-databases:
-  - name: album-flow-db
-    plan: "free"
-    databaseName: album_flow
-    user: album_flow
+# the database lives on neon's free plan (no expiry) instead of render,
+# whose free postgres is deleted 30 days after creation, so DATABASE_URL is
+# a secret set by hand in the dashboard rather than wired from a resource
 
 services:
   - type: web
@@ -33,9 +31,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: album-flow-db
-          property: connectionString
+        sync: false
       - key: SPOTIFY_CLIENT_ID
         sync: false
       - key: SPOTIFY_CLIENT_SECRET
